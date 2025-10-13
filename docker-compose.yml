@@ -1,0 +1,167 @@
+version: "3.8"
+
+services:
+  # ====================
+  # Zookeeper + Kafka
+  # ====================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8086:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    depends_on:
+      - kafka
+
+  # ====================
+  # Databases
+  # ====================
+  postgres-verification:
+    image: postgres:15
+    container_name: postgres-verification
+    environment:
+      POSTGRES_USER: verification_user
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: verificationdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_verification_data:/var/lib/postgresql/data
+
+  postgres-notification:
+    image: postgres:15
+    container_name: postgres-notification
+    environment:
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: notificationdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_notification_data:/var/lib/postgresql/data
+
+  postgres-template:
+    image: postgres:15
+    container_name: postgres-template
+    environment:
+      POSTGRES_USER: template_user
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: templatedb
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_template_data:/var/lib/postgresql/data
+
+  # ====================
+  # Adminer UI
+  # ====================
+  adminer:
+    image: adminer
+    container_name: adminer
+    depends_on:
+      - postgres-verification
+      - postgres-notification
+      - postgres-template
+    ports:
+      - "8083:8080"
+
+  # ====================
+  # Utilities
+  # ====================
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+  gotify:
+    image: gotify/server
+    container_name: gotify
+    ports:
+      - "8094:80"
+    volumes:
+      - gotify_data:/app/data
+
+  # ====================
+  # Spring Boot Apps
+  # ====================
+  verification-service:
+    build: ./verification-service
+    container_name: verification-service
+    depends_on:
+      - kafka
+      - postgres-verification
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-verification:5432/verificationdb
+      SPRING_DATASOURCE_USERNAME: verification_user
+      SPRING_DATASOURCE_PASSWORD: secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8080:8080"
+
+  template-service:
+    build: ./template-service
+    container_name: template-service
+    depends_on:
+      - postgres-template
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-template:5432/templatedb
+      SPRING_DATASOURCE_USERNAME: template_user
+      SPRING_DATASOURCE_PASSWORD: secret
+    ports:
+      - "8084:8080"
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    depends_on:
+      - kafka
+      - template-service
+      - postgres-notification
+      - mailhog
+      - gotify
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-notification:5432/notificationdb
+      SPRING_DATASOURCE_USERNAME: notification_user
+      SPRING_DATASOURCE_PASSWORD: secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      GOTIFY_URL: http://gotify:80
+      GOTIFY_TOKEN: 	Aw1_hhGrH2zlj1r
+
+    ports:
+      - "8085:8080"
+
+volumes:
+  postgres_verification_data:
+  postgres_notification_data:
+  postgres_template_data:
+  gotify_data:
