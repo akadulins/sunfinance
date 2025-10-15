@@ -37,7 +37,7 @@ public class Verification {
         this.userInfo = userInfo;
         this.code = code;
         this.createdAt = Instant.now();
-        this.expiresAt = createdAt.plus(Duration.ofMinutes(5));
+        this.expiresAt = createdAt.plus(ttl);
     }
     
     public UUID getId() {
@@ -72,7 +72,7 @@ public class Verification {
 	}
     
     public boolean isExpired() {
-        return Instant.now().isAfter(expiresAt);
+    	return Instant.now().isAfter(expiresAt);
     }
     
     public void confirm(String providedCode, String providedUserInfo) throws VerificationExpiredException {
