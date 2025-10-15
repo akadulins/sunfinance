@@ -125,8 +125,12 @@ services:
       SPRING_DATASOURCE_USERNAME: verification_user
       SPRING_DATASOURCE_PASSWORD: secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JAVA_TOOL_OPTIONS: >
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
     ports:
-      - "8080:8080"
+      - "8080:8080"   # Application port
+      - "5006:5006"   # Debug port
+
 
   template-service:
     build: ./template-service
@@ -137,8 +141,11 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-template:5432/templatedb
       SPRING_DATASOURCE_USERNAME: template_user
       SPRING_DATASOURCE_PASSWORD: secret
+      JAVA_TOOL_OPTIONS: >
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
     ports:
       - "8084:8080"
+      - "5007:5007"
 
   notification-service:
     build: ./notification-service
@@ -155,11 +162,12 @@ services:
       SPRING_DATASOURCE_PASSWORD: secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       GOTIFY_URL: http://gotify:80
-      GOTIFY_TOKEN: 	Aw1_hhGrH2zlj1r
-
+      GOTIFY_TOKEN: Aw1_hhGrH2zlj1r
+      JAVA_TOOL_OPTIONS: >
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5008
     ports:
       - "8085:8080"
-
+      - "5008:5008"
 volumes:
   postgres_verification_data:
   postgres_notification_data:
