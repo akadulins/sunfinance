@@ -27,7 +27,6 @@ public class VerificationConfig {
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
         mapper.registerModule(new JavaTimeModule());
         return mapper;
     }
