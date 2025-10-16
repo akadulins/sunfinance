@@ -1,5 +1,8 @@
 package com.sunfinance.common.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum SubjectType {
     EMAIL_CONFIRMATION("email_confirmation"),
     MOBILE_CONFIRMATION("mobile_confirmation");
@@ -10,16 +13,26 @@ public enum SubjectType {
         this.type = type;
     }
 
+    @JsonValue
     public String getType() {
         return type;
     }
 
-    public static SubjectType fromString(String type) {
+    @JsonCreator
+    public static SubjectType fromValue(String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("SubjectType cannot be null");
+        }
+
+        String normalized = value.toLowerCase();
+
         for (SubjectType st : values()) {
-            if (st.type.equals(type)) {
+            String enumNormalized = st.type.toLowerCase();
+            if (enumNormalized.equals(normalized)) {
                 return st;
             }
         }
-        throw new IllegalArgumentException("Unknown subject type: " + type);
+
+        throw new IllegalArgumentException("Unknown subject type: " + value);
     }
 }
