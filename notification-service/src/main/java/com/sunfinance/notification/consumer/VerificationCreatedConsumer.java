@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,6 +25,10 @@ import com.sunfinance.common.events.DomainEventPublisher;
 import com.sunfinance.common.model.Verification;
 import com.sunfinance.notification.entity.Notification;
 import com.sunfinance.notification.repository.NotificationRepository;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 
 
 
@@ -41,6 +46,8 @@ public class VerificationCreatedConsumer {
     private String gotifyUrl; 
 	
     private String gotifyToken;
+    
+    private String senderEmail;
 
     public VerificationCreatedConsumer(
             NotificationRepository notificationRepository,
@@ -49,7 +56,8 @@ public class VerificationCreatedConsumer {
             DomainEventPublisher eventPublisher,
             ObjectMapper objectMapper,
             @Value("${GOTIFY_URL}")  String gotifyUrl,
-            @Value("${GOTIFY_TOKEN}") String gotifyToken
+            @Value("${GOTIFY_TOKEN}") String gotifyToken,
+            @Value("${SENDER_EMAIL}") String senderEmail
     ) {
         this.notificationRepository = notificationRepository;
         this.mailSender = mailSender;
@@ -58,6 +66,7 @@ public class VerificationCreatedConsumer {
         this.objectMapper = objectMapper;
         this.gotifyUrl = gotifyUrl;
         this.gotifyToken = gotifyToken;
+        this.senderEmail = senderEmail;
     }
     
     @KafkaListener(topics = "verification.created", groupId = "notification-service")
@@ -136,14 +145,23 @@ public class VerificationCreatedConsumer {
         }
     }
 
-    private void sendEmail(Notification notification) {
+    private void sendEmail(Notification notification)  {
         String body = getTemplateContent("email-verification", Map.of("code", notification.getBody()));
         log.info("Body... " + body);
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(notification.getRecipient());
-        message.setSubject("Your verification code");
-        message.setText(body);
-     
+        MimeMessage message = mailSender.createMimeMessage();
+      
+        try {
+        	MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        	helper.setFrom(senderEmail);
+            message.setSender(new InternetAddress(senderEmail));
+
+            helper.setTo(notification.getRecipient());
+            helper.setSubject("Your verification code");
+            helper.setText(body, true);
+           
+		} catch (MessagingException e) {
+			log.error("Failed to send Mailhog message: " + e.getMessage());
+		}
         mailSender.send(message);
     }
 
