@@ -146,8 +146,9 @@ public class VerificationCreatedConsumer {
     }
 
     private void sendEmail(Notification notification)  {
-        String body =  notification.getBody();
-        log.info("Body... " + body);
+        String htmlBody =  notification.getBody();
+        String plainText = htmlBody == null ? "" : htmlBody.replaceAll("<[^>]*>", "").trim();
+        log.info("Body... " + htmlBody);
         MimeMessage message = mailSender.createMimeMessage();
       
         try {
@@ -157,7 +158,7 @@ public class VerificationCreatedConsumer {
 
             helper.setTo(notification.getRecipient());
             helper.setSubject("Your verification code");
-            helper.setText(body, true);
+            helper.setText(plainText, htmlBody);
            
 		} catch (MessagingException e) {
 			log.error("Failed to send Mailhog message: " + e.getMessage());
