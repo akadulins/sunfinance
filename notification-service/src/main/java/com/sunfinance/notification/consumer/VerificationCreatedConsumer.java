@@ -146,7 +146,7 @@ public class VerificationCreatedConsumer {
     }
 
     private void sendEmail(Notification notification)  {
-        String body = getTemplateContent("email-verification", Map.of("code", notification.getBody()));
+        String body =  notification.getBody();
         log.info("Body... " + body);
         MimeMessage message = mailSender.createMimeMessage();
       
