@@ -1,0 +1,49 @@
+{
+  "version": 3,
+  "name": "API Gateway",
+  "port": 8080,
+  "timeout": "5s",
+  "cache_ttl": "300s",
+  "endpoints": [
+    {
+      "endpoint": "/api/verifications",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://verification-service:8080"],
+          "url_pattern": "/verifications"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/verifications/{id}/confirm",
+      "method": "PUT",
+      "backend": [
+        {
+          "host": ["http://verification-service:8080"],
+          "url_pattern": "/verifications/{id}/confirm"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/templates/render",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://template-service:8084"],
+          "url_pattern": "/templates/render"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/notifications",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://notification-service:8085"],
+          "url_pattern": "/notifications"
+        }
+      ]
+    }
+  ]
+}

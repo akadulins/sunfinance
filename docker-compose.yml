@@ -117,6 +117,21 @@ services:
     volumes:
       - gotify_data:/app/data
 
+  krakend:
+    image: devopsfaith/krakend
+    container_name: krakend
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./krakend/krakend.json:/etc/krakend/krakend.json
+    depends_on:
+      - verification-service
+      - notification-service
+      - template-service
+    networks:
+      - default
+
   # ====================
   # Spring Boot Apps
   # ====================
