@@ -1,19 +1,17 @@
-package com.sunfinance.verification.controller;
+package com.sunfinance.verification.api.rest;
+
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.sunfinance.common.dto.ConfirmVerificationRequest;
-import com.sunfinance.common.dto.CreateVerificationRequest;
 import com.sunfinance.common.dto.CreateVerificationResponse;
 import com.sunfinance.common.exceptions.VerificationExpiredException;
+import com.sunfinance.verification.api.mapper.VerificationApiMapper;
+import com.sunfinance.verification.api.model.*;
+import com.sunfinance.verification.application.CreateVerificationCommand;
+import com.sunfinance.verification.application.ConfirmVerificationCommand;
 import com.sunfinance.verification.service.VerificationService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,26 +19,43 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestController
 @RequestMapping("/verifications")
 public class VerificationController {
+    
     private final VerificationService service;
+    private final VerificationApiMapper mapper; 
 
-    public VerificationController(VerificationService service) { this.service = service; }
+    public VerificationController(VerificationService service, VerificationApiMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
+    }
 
     @PostMapping
     public ResponseEntity<CreateVerificationResponse> create(
-            @RequestBody CreateVerificationRequest req,
+            @RequestBody CreateVerificationRequest request,
             HttpServletRequest servletRequest) {
+        
         String userInfo = extractUserInfo(servletRequest);
-        UUID id = service.createVerification(req, userInfo);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new CreateVerificationResponse(id));
+        
+        CreateVerificationCommand command = mapper.toCommand(request, userInfo);
+ 
+        UUID id = service.createVerification(command);
+        
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new CreateVerificationResponse(id));
     }
 
     @PutMapping("/{id}/confirm")
     public ResponseEntity<Void> confirm(
-    		@PathVariable("id") UUID id,
+            @PathVariable("id") UUID id,
             @RequestBody ConfirmVerificationRequest request,
             HttpServletRequest servletRequest) throws VerificationExpiredException {
+        
         String userInfo = extractUserInfo(servletRequest);
-        service.confirmVerification(id, request, userInfo);
+        
+        ConfirmVerificationCommand command = mapper.toConfirmCommand(id, request, userInfo);
+
+        service.confirmVerification(command);
+        
         return ResponseEntity.noContent().build();
     }
 

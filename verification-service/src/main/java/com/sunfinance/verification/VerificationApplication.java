@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EntityScan(basePackages = {"com.sunfinance.common.model"})
-@EnableJpaRepositories(basePackages = {"com.sunfinance.verification.repository"})
+@EnableJpaRepositories(basePackages = {"com.sunfinance.verification.domain.repository"})
 @ComponentScan(basePackages = {"com.sunfinance"})
 @EnableScheduling
 public class VerificationApplication {

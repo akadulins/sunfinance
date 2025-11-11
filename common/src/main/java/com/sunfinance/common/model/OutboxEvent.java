@@ -7,77 +7,37 @@ import java.util.UUID;
 @Entity
 @Table(name = "outbox_events")
 public class OutboxEvent {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    private String topic;
-    
-    private String eventType;
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@Column(updatable = false, nullable = false)
+	private UUID id;
 
-    @Column(columnDefinition = "TEXT")
-    private String payload;
+	@Column(nullable = false)
+	private String topic;
 
-    private boolean processed = false;
+	private String eventType;
 
-    private Instant createdAt = Instant.now();
+	@Column(nullable = false, columnDefinition = "TEXT")
+	private String payload;
 
-    public OutboxEvent() {}
+	private boolean processed = false;
 
-    public OutboxEvent(String eventType, String payload) {
-        this.eventType = eventType;
-        this.payload = payload;
-        this.createdAt = Instant.now();
-    }
+	@Column(nullable = false)
+	private Instant createdAt = Instant.now();
 
-   
+	public OutboxEvent() {}
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getTopic() {
-		return topic;
-	}
-
-	public void setTopic(String topic) {
+	public OutboxEvent(String topic, String payload) {
 		this.topic = topic;
-	}
-
-	public String getEventType() {
-		return eventType;
-	}
-
-	public void setEventType(String eventType) {
-		this.eventType = eventType;
-	}
-
-	public String getPayload() {
-		return payload;
-	}
-
-	public void setPayload(String payload) {
 		this.payload = payload;
 	}
 
-	public Instant getCreatedAt() {
-		return createdAt;
-	}
+	public UUID getId() { return id; }
+	public String getTopic() { return topic; }
+	public String getEventType() { return eventType; }
+	public String getPayload() { return payload; }
+	public Instant getCreatedAt() { return createdAt; }
+	public boolean isProcessed() { return processed; }
 
-	public void setCreatedAt(Instant createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public boolean isProcessed() {
-		return processed;
-	}
-
-	public void setProcessed(boolean processed) {
-		this.processed = processed;
-	}
 }

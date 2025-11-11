@@ -1,83 +1,56 @@
 package com.sunfinance.common.model;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.UUID;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.sunfinance.common.events.VerificationCreated;
 import com.sunfinance.common.exceptions.InvalidCodeException;
 import com.sunfinance.common.exceptions.VerificationExpiredException;
 import com.sunfinance.common.exceptions.VerificationForbiddenException;
 
 import jakarta.persistence.*;
 
-@Entity
-@Table(name = "verifications")
-public class Verification {
-	@Id
-    @GeneratedValue
-    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
-	private UUID id;
-	
-	public Verification() {}
-   
+import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
 
-	@Embedded
+@Entity
+@Table(name = "verification")
+public class Verification {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
+    @Embedded
     private Subject subject;
-    private boolean confirmed = false;
-    private String code;
     private String userInfo;
-    private Instant createdAt;
-    private Instant expiresAt;
+    private String code;
+    private boolean confirmed = false;
+    private Instant createdAt = Instant.now();
+    private Instant expiresAt;    
     
-    private int failedAttempts = 0;
-    
+	private int failedAttempts = 0;
+
+    protected Verification() {}
+
     public Verification(Subject subject, String userInfo, String code, Duration ttl) {
-        this.id = UUID.randomUUID();
+        //this.id = UUID.randomUUID();
         this.subject = subject;
         this.userInfo = userInfo;
         this.code = code;
         this.createdAt = Instant.now();
-        this.expiresAt = createdAt.plus(ttl);
+        this.expiresAt = createdAt.plus(Duration.ofMinutes(5));
     }
-    
-    public UUID getId() {
-		return id;
-	}
 
-	public void setId(UUID id) {
-		this.id = id;
-	}
-    
-    public Subject getSubject() {
-		return subject;
-	}
-	
-	public boolean isConfirmed() {
-		return confirmed;
-	}
-	public void setConfirmed(boolean confirmed) {
-		this.confirmed = confirmed;
-	}
-	public String getCode() {
-		return code;
-	}
-	public void setCode(String code) {
-		this.code = code;
-	}
-	public String getUserInfo() {
-		return userInfo;
-	}
-	public void setUserInfo(String userInfo) {
-		this.userInfo = userInfo;
-	}
-    
+   
     public boolean isExpired() {
-    	return Instant.now().isAfter(expiresAt);
+        return Instant.now().isAfter(expiresAt);
     }
-    
+
     public void confirm(String providedCode, String providedUserInfo) throws VerificationExpiredException {
         if (isExpired()) {
-            throw new VerificationExpiredException();
+            throw new VerificationExpiredException();          
         }
         if (!providedUserInfo.equals(this.userInfo)) {
             throw new VerificationForbiddenException();
@@ -94,4 +67,29 @@ public class Verification {
         }
         this.confirmed = true;
     }
+
+
+    public String toDomainEventJson() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule()); // чтобы сериализовать Instant
+            return mapper.writeValueAsString(new VerificationCreated(
+                    this.id,
+                    this.code,
+                    this.subject,
+                    Instant.now()
+            ));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize VerificationCreated event", e);
+        }
+    }
+
+    public UUID getId() { return id; }
+    public Subject getSubject() { return subject; }
+    public String getUserInfo() { return userInfo; }
+    public String getCode() { return code; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public boolean isConfirmed() { return confirmed; }
+    public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
 }
