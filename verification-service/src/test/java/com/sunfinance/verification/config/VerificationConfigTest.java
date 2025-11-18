@@ -14,7 +14,7 @@ class VerificationConfigTest {
     void shouldHaveDefaultValues() {
         VerificationConfig config = new VerificationConfig();
         
-        assertEquals(6, config.getCodeLength());
+        assertEquals(8, config.getCodeLength());
         assertEquals(Duration.ofMinutes(5), config.getValidityPeriod());
     }
 

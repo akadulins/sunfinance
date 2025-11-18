@@ -16,7 +16,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 public class VerificationConfig {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(VerificationConfig.class);
 
-    private int codeLength = 6; // default
+    private int codeLength = 8; // default
     private Duration validityPeriod = Duration.ofMinutes(5); // default 5 minutes
 
     public int getCodeLength() { return codeLength; }
