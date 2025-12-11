@@ -14,8 +14,6 @@ import com.sunfinance.verification.config.VerificationConfig;
 import com.sunfinance.verification.domain.events.DomainEventPublisher;
 import com.sunfinance.verification.domain.repository.*;
 
-import lombok.RequiredArgsConstructor;
-
 
 @Service
 @Transactional
@@ -74,7 +72,7 @@ public class VerificationService {
         return verification.getId();
     }
 
-   
+    @Transactional(noRollbackFor = InvalidCodeException.class)
     public void confirmVerification(ConfirmVerificationCommand command) throws VerificationExpiredException {
         log.info("Confirming verification: {}", command.verificationId());
         
@@ -85,11 +83,8 @@ public class VerificationService {
         try {
             
             verification.confirm(command.code(), command.userInfo());
-            
-           
             verificationRepository.save(verification);
-            
-            
+
             if (verification.isConfirmed()) {
                 eventPublisher.publish(new VerificationConfirmed(
                         verification.getId(),
@@ -100,7 +95,7 @@ public class VerificationService {
             }
             
         } catch (InvalidCodeException e) {
-            
+        	
             eventPublisher.publish(new VerificationConfirmationFailed(
                     verification.getId(),
                     verification.getCode(),
