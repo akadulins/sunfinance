@@ -11,7 +11,6 @@ import com.sunfinance.common.model.*;
 import com.sunfinance.verification.application.CreateVerificationCommand;
 import com.sunfinance.verification.application.ConfirmVerificationCommand;
 import com.sunfinance.verification.config.VerificationConfig;
-import com.sunfinance.verification.domain.events.DomainEventPublisher;
 import com.sunfinance.verification.domain.repository.*;
 
 

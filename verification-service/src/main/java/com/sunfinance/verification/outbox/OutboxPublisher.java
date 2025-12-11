@@ -35,9 +35,9 @@ public class OutboxPublisher {
 				if (event.getTopic() == null || event.getTopic().isBlank()) {
 					throw new IllegalArgumentException("Topic cannot be null or empty for event " + event.getId());
 				}
-
+				log.info("Processing outbox: {}", event.getId());
 				kafkaTemplate.send(event.getTopic(), event.getPayload());
-				outboxRepo.markProcessed( event.getId());
+				outboxRepo.markProcessed(event.getId());
 				outboxRepo.save(event);
 			} catch (Exception e) {
 				log.error("Failed to publish event {}: {}", event.getId(), e.getMessage());

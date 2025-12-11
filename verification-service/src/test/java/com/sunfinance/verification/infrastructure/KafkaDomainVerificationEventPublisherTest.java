@@ -59,7 +59,7 @@ class KafkaDomainVerificationEventPublisherTest {
         
         verify(kafkaTemplate).send(topicCaptor.capture(), payloadCaptor.capture());
         
-        assertEquals("verification.created", topicCaptor.getValue());
+        assertEquals("verification.confirmed", topicCaptor.getValue());
         assertEquals(expectedJson, payloadCaptor.getValue());
     }
 

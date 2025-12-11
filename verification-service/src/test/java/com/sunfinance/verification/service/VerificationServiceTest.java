@@ -1,10 +1,10 @@
 package com.sunfinance.verification.service;
 
+import com.sunfinance.common.events.DomainEventPublisher;
 import com.sunfinance.common.exceptions.*;
 import com.sunfinance.common.model.*;
 import com.sunfinance.verification.application.*;
 import com.sunfinance.verification.config.VerificationConfig;
-import com.sunfinance.verification.domain.events.DomainEventPublisher;
 import com.sunfinance.verification.domain.repository.*;
 
 import org.junit.jupiter.api.BeforeEach;

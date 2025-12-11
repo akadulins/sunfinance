@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import com.sunfinance.common.model.OutboxEvent;
 import com.sunfinance.verification.domain.repository.OutboxEventRepository;
+import com.sunfinance.verification.infrastructure.KafkaDomainVerificationEventPublisher;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +16,8 @@ import java.util.UUID;
 @Repository
 @Transactional
 public class OutboxEventRepositoryImpl implements OutboxEventRepository {
+	
+	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(OutboxEventRepositoryImpl.class);
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -22,6 +25,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
     @Override
     public void save(OutboxEvent event) {
         entityManager.persist(event);
+        log.info("OUTBOX SAVED: {}", event.getEventType());
     }
 
     @Override
